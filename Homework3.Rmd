@@ -167,7 +167,7 @@ ggplot(survdata, aes(x = Age)) +
 
 survdata_df <- survdata %>%
   group_by(Survived) %>%
-  summarize(N = n(), mean = mean(Age, na.rm = TRUE), na = sum(is.na(Age)))
+  summarize(N = n(), mean = mean(Age, na.rm = TRUE), na = sum(is.na(Age)), min = min(Age, na.rm = TRUE))
 print(survdata_df)
 
 # Stat Test
