@@ -142,12 +142,12 @@ survdata <- mutate(.data = survdata,
 top_surv <- survdata %>%
   filter(Survived == "Survived") %>%
   arrange(desc(Age)) %>%
-  slice(1:5)
+  slice(1:10)
 
 top_died <- survdata %>%
   filter(Survived == "Died") %>%
   arrange(desc(Age)) %>%
-  slice(1:5)
+  slice(1:10)
 
 # Merge to Form 10 Rows
 
