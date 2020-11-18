@@ -1,0 +1,200 @@
+---
+title: 'Homework #3'
+author: "Sarah Derda"
+date: "Due Date: October 16, 2020"
+output: word_document
+---
+
+## Question #1: Setting Global Options  
+
+
+
+```{r global_options&libraries}
+
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning=FALSE, 
+                      message=FALSE, 
+                      error=FALSE)
+
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(titanic)
+library(stringr)
+
+```
+
+## Question #2: Editing HW#2 Plot  
+
+
+
+```{r homework#2plots}
+
+# Importing Data
+
+airline_url <- paste0("https://raw.githubusercontent.com/fivethirtyeight/data/master/airline-safety/airline-safety.csv")
+airline <- read_csv(file = airline_url)
+head(airline)
+summary(airline)
+
+# Cleaning Data
+
+airline2 <- airline %>% 
+  rename(Airline = airline,
+         PAX_Carrying_Capacity = avail_seat_km_per_week,
+         Incidents_85_99 = incidents_85_99,
+         Fatal_Accidents_85_99 = fatal_accidents_85_99,
+         Fatalities_85_99 = fatalities_85_99,
+         Incidents_00_14 = incidents_00_14,
+         Fatal_Accidents_00_14 = fatal_accidents_00_14,
+         Fatalities_00_14 = fatalities_00_14) %>%
+  filter(Airline %in% c("Aer Lingus", "Aeroflot*", "Aerolineas Argentinas", "Aeromexico*",
+                        "Air Canada", "Air France", "Air India*", "Air New Zealand*",
+                        "Alitalia", "All Nippon Airways", "Austrian Airlines", "Avianca",
+                        "British Airways", "Cathay Pacific", "China Airlines", "Condor",
+                        "COPA", "Egyptair", "El Al", "Ethiopian Airlines", "Finnair",
+                        "Garuda Indonesia", "Gulf Air", "Iberia", "Japan Airlines",
+                        "Kenya Airways", "KLM*", "Korean Air", "LAN Airlines", "Lufthansa*",
+                        "Malaysia Airlines", "Pakistan International", "Philippine Airlines",
+                        "Qantas*", "Royal Air Maroc", "SAS*", "Saudi Arabian", "Singapore Airlines",
+                        "South African", "Sri Lankan / AirLanka", "SWISS*", "TACA", "TAM",
+                        "TAP - Air Portugal", "Thai Airways", "Turkish Airlines", "Vietnam Airlines",
+                        "Virgin Atlantic", "Xiamen Airlines"))
+
+```
+
+
+```{r plots, fig.width = 10, fig.height = 6}
+
+# Plotting Data
+
+ggplot(airline2, aes(x = Incidents_00_14, y = Airline, size = PAX_Carrying_Capacity)) +
+          geom_point(color = "red") + 
+          labs(x = "Incidents, 2000-2014", y = "Airline", title = "Incidents per Trillion Available Seat Kilometers per Non-U.S. Airline, 2000-2014") + 
+          theme_classic()
+
+# Editing Plot
+
+ggplot(airline2, aes(x = Incidents_00_14, y = Airline, 
+                           color = PAX_Carrying_Capacity,
+                           size = PAX_Carrying_Capacity)) +
+          geom_point() + 
+          labs(x = "Incidents, 2000-2014", y = "Non-U.S. Airline", title = "Incidents per Trillion Available Seat Kilometers per Non-U.S. Airline, 2000-2014", size = "Passenger Carrying Capacity") + 
+          theme_minimal() +
+          theme(axis.title = element_text(size = 10), 
+                plot.title = element_text(size = 10), 
+                axis.text.y = element_text(size  = 5),
+                legend.title = element_text(size = 10),
+                legend.text = element_text(size = 5))
+
+```
+
+
+Among the six guidelines for good graphics, the first graph above depicts high data density 
+and using clear, meaningful labels. Aiming for high data density allows the viewer
+to easily see the message you're trying to convey as a coder. The higher the data
+to ink ratio is, the less "ink" there will be to process, which takes less time to
+read overall. Using clear, meaninful labels is also beneficial for readability.
+Providing descriptive labels for viewers allow them to interpret the graph better
+by clearly stating what each aspect of the graph conveys.
+
+The second graph was edited. There was a background grid added in order to look at
+the points more easily between the airlines and how many incidents they had per 
+passenger carrying capacity. The text was also enlarged to make it easier to read. 
+Furthermore, the color of the points were changed in order to depict the size of passenger carrying
+capacity. Font sizes were also adjusted in order to distuinguish the titles and the
+general text.
+
+## Question #3: Titanic Dataset  
+
+
+
+```{r titanic}
+
+# Import Data & Observe
+
+tt <- titanic_train
+head(tt)
+
+survdata <- tt %>%
+  as.data.frame() %>%
+  select("Survived", "Age")
+
+class(survdata$Survived)
+
+# Change Variable from Integer to Factor
+
+survdata$Survived <- as.factor(survdata$Survived)
+class(survdata$Survived)
+
+levels(survdata$Survived)
+
+# Relabel
+
+survdata <- mutate(.data = survdata,
+              Survived = fct_recode(.f = Survived,
+                                  Died = "0",
+                                  Survived = "1"))
+
+# Top Ages of Survived and Died
+
+top_surv <- survdata %>%
+  filter(Survived == "Survived") %>%
+  arrange(desc(Age)) %>%
+  slice(1:5)
+
+top_died <- survdata %>%
+  filter(Survived == "Died") %>%
+  arrange(desc(Age)) %>%
+  slice(1:5)
+
+# Merge to Form 10 Rows
+
+join_surv <- full_join(top_surv, top_died)
+print(join_surv)
+
+# Plot
+
+ggplot(survdata, aes(x = Age)) + 
+        geom_histogram(fill = "white", color = "black") + 
+        facet_wrap(~ Survived, ncol = 1) + 
+        theme_classic() +
+        labs(y = "Frequency", 
+             title = "Frequency Distribution of Age Among Deaths and Survivals")
+
+# Two-Row Table Details
+
+survdata_df <- survdata %>%
+  group_by(Survived) %>%
+  summarize(N = n(), mean = mean(Age, na.rm = TRUE), na = sum(is.na(Age)))
+print(survdata_df)
+
+# Stat Test
+
+t.test(survdata$Age[survdata$Survived=="Died"], survdata$Age[survdata$Survived=="Survived"])
+  
+```
+
+## Question #4: Word Puzzle  
+
+
+
+```{r wordphrase}
+
+words_alpha_url <- read_tsv("https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt", col_names = "word")
+
+words_alpha <- words_alpha_url
+
+wordphrase <- words_alpha %>%
+  filter(str_detect(word, "^.{8}$")) %>%
+  filter(str_detect(word, "^[Mm]")) %>%
+  mutate(first = str_sub(word, 1, 4),
+         second = paste0(str_sub(word, 6, 8), str_sub(word, 5, 5))) %>%
+  filter(first %in% words_alpha$word & second %in% words_alpha$word)
+
+```
+
+I was not able to find the wordphrase. With the help of Nick, I was able to reduce
+the list to 215 words; however, all of them look like they have a different sound
+after moving the first letter of the second word to the end of the eight word phrase.

@@ -1,0 +1,210 @@
+---
+title: 'ERHS 535 Homework #2'
+author: "Sarah Derda"
+date: "Due Date: October 2, 2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+## Section 1: Description of Data
+
+This data is describing various airline companies safety records and whether or 
+not these airlines have experienced incidents, fatal incidents, and/or fatalities
+based on data from the years 1989 to 1999 and 2000 to 2014. The airline safety data
+was collected from the "Aviation Safety Network's Database." The coder named
+Nate Silver broke the data into the two previosuly mentioned time periods. Silver
+wanted to look into whether people were less inclined to fly a particular airline 
+because of their crash history - whether it was their fault or not. He had also
+accounted for the number of available seat kilometers since one airline could fly
+more or less than another ultimately adjusting this value. He also looked into the 
+correlation between the time periods to see if there was a huge difference.
+He found there was no correlation. Along with Silver's findings, I think it would 
+be useful to look into a portion of which airlines had the least and the most incidents, fatal 
+incidents, and/or fatalities overall. It would be interesting to look into the 
+combined occurrences as well. Some researchers might be interested in this data to
+see if there patterns across other time periods. If the data would be available, I
+think it would be interesting to look into the impact of a pandemic, such as the
+occurrence of COVID-19, and see if it affected airline safety based on fatalities, 
+fatal incidents, and/or incidents. For this assignment, I'll be focusing on only 
+non-U.S. airlines. The asterisk for each airline means that regional subsidiaries were
+included. As for the format of the data, it is a comma-separated value file, which 
+is a delimited text file that uses a comma delimiter to separate values or fields 
+within the dataset.
+
+
+## Section 2: Reading the Data into RStudio
+
+In order to read in this dataset, you would need to install the "readr" package
+and call upon it's library. There are multiple ways you could import the "csv" data
+into RStudio. One way is by saving the file onto your computer to a specific name
+and importing it using the "Import Dataset" button under "File." A second way is
+calling upon the directory where it is located. Another way is by using the 
+"paste0" function to create an object with the url since we're importing it through 
+GitHub and then reading it into RStudio with "read_csv" by inputting the file name
+used to import the data from the internet. The last option is shown below.
+
+I did not need to use any special options to upload this data. The dates from the
+original dataset were sectioned into two time periods mentioned previously, so no
+dates needed to be formatted as they were already included into the variable name. 
+I did end up renaming some of the columns for easier readability. In order to look 
+at non-U.S. airlines only, I filtered out all non-U.S. airlines. This was a fairly
+simple dataset, so I didn't need to arrange anything using arrange() or add any 
+other variables using mutate() for my interests.
+
+
+```{r libraries, include = TRUE, results = FALSE}
+
+# Upload libraries to use functions.
+
+library(knitr)
+library(readr)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+
+```
+
+```{r airline dataset}
+
+airline_url <- paste0("https://raw.githubusercontent.com/fivethirtyeight/data/master/airline-safety/airline-safety.csv")
+
+airline <- read_csv(file = airline_url)
+
+head(airline)
+
+summary(airline)
+
+airline2 <- airline %>% 
+  rename(Airline = airline,
+         PAX_Carrying_Capacity = avail_seat_km_per_week,
+         Incidents_85_99 = incidents_85_99,
+         Fatal_Accidents_85_99 = fatal_accidents_85_99,
+         Fatalities_85_99 = fatalities_85_99,
+         Incidents_00_14 = incidents_00_14,
+         Fatal_Accidents_00_14 = fatal_accidents_00_14,
+         Fatalities_00_14 = fatalities_00_14) %>%
+  filter(Airline %in% c("Aer Lingus", "Aeroflot*", "Aerolineas Argentinas", "Aeromexico*",
+                        "Air Canada", "Air France", "Air India*", "Air New Zealand*",
+                        "Alitalia", "All Nippon Airways", "Austrian Airlines", "Avianca",
+                        "British Airways", "Cathay Pacific", "China Airlines", "Condor",
+                        "COPA", "Egyptair", "El Al", "Ethiopian Airlines", "Finnair",
+                        "Garuda Indonesia", "Gulf Air", "Iberia", "Japan Airlines",
+                        "Kenya Airways", "KLM*", "Korean Air", "LAN Airlines", "Lufthansa*",
+                        "Malaysia Airlines", "Pakistan International", "Philippine Airlines",
+                        "Qantas*", "Royal Air Maroc", "SAS*", "Saudi Arabian", "Singapore Airlines",
+                        "South African", "Sri Lankan / AirLanka", "SWISS*", "TACA", "TAM",
+                        "TAP - Air Portugal", "Thai Airways", "Turkish Airlines", "Vietnam Airlines",
+                        "Virgin Atlantic", "Xiamen Airlines"))
+
+```
+
+
+## Section 3: Characteristics of the Data
+
+There are `r nrow(airline2)` rows and `r ncol(airline2)` columns in the "airline2" dataset. 
+
+```{r table}
+
+airline_table <- data.frame(letters = c("Airline", "PAX_Carrying_Capacity", "Incidents_85_99",
+                                   "Fatal_Accidents_85_99", "Fatalities_85_99", "Incidents_00_14",
+                                   "Fatal_Accidents_00_14", "Fatalities_00_14"),
+                       letters = c("Airline name", "Available seats per kilometer per week", "Incidents from 1985 to 1999", "Fatal accidents from 1985 to 1999", "Fatalities from 1985 to 1999", "Incidents from 2000 to 2014", "Fatal accidents from 2000 to 2014", "Fatalities from 2000 to 2014"),
+                       letters = c("None", "None", "None", "None", "None", "None", "None", "None"))
+
+kable(airline_table, align = c("l", "l", "l"),
+      caption = "Airline Characteristics", 
+      col.names = c("Column Name", "Description", "Units"))
+
+```
+
+
+## Section 4: Summary Statistics
+
+There were no missing values from any of the airlines. The summaries are shown below.
+
+```{r summarize}
+
+sum(is.na(airline2))
+
+airline_summaries <- airline2 %>%
+  summarize(min_inc_00_14 = min(Incidents_00_14), max_inc_00_14 = max(Incidents_00_14),
+            mean_inc_00_14 = mean(Incidents_00_14), na_inc_00_14 = sum(is.na(Incidents_00_14)),
+            min_facc_00_14 = min(Fatal_Accidents_00_14), max_facc_00_14 = max(Fatal_Accidents_00_14),
+            mean_facc_00_14 = mean(Fatal_Accidents_00_14), na_facc_00_14 = sum(is.na(Fatal_Accidents_00_14)),
+            min_fat_00_14 = min(Fatalities_00_14), max_fat_00_14 = max(Fatalities_00_14),
+            mean_fat_00_14 = mean(Fatalities_00_14), na_fat_00_14 = sum(is.na(Fatalities_00_14))) %>%
+  pivot_longer(col = min_inc_00_14:na_fat_00_14,
+             names_to = "Summary",
+             values_to = "Value")
+
+print(airline_summaries)
+
+```
+
+
+## Section 5: Visualizing Data
+
+While first visualizing the data, I wanted to look into comparing incidents between 
+the two time periods among non-U.S. airlines. This would allow us to get a better 
+glimpse into the overall distrubution or frequency of incidents in non-U.S. airlines 
+using histograms that are weighted by passenger carrying capacity (seats per kilometers 
+per week). Secondly, by producing scatterplots showing which non-U.S. airlines had 
+the most incidents, we have some insight into which *might* have more of a risk of an
+incident occurring. Again, this is only examining incidents as that has some indication 
+of something going wrong with the flight rather than looking into fatalities, which 
+indicates that the incident or accident was fatal. Furthermore, these graphs 
+could aid in looking at histories of an individual airline - U.S. or non-U.S based. 
+Also, I think it would be interesting comparing two countries' airlines if a researcher 
+wanted to examine countries that seem to portray more of a risk in safety. In producing 
+these graphs, two good graphing techniques that were met were 1) high data density 
+and 2) making the order meaningful since there were two time periods involved. High 
+data density was met in the ink to data ratio within the graphs. The order was meaningful 
+due to the fact that we're comparing the time period from 1985-1999 and 2000-2014.
+However, it is important to note that when comparing these, the values along the x-axis
+are different between the two time periods.
+
+As we can see from the graphs, it looks like there were more incidents among all airlines
+from 1985 to 1999 compared to the time period from 2000 to 2014. From 1985 to 1999,
+Aeroflot had the highest number of incidents. From 2000 to 2014, Saudi Arabian had
+the highest amount of incidents, but it was a far less number than Aeroflot.
+
+
+```{r plots, fig.width = 8, fig.height = 6}
+
+# Statistical Graphing - Histograms
+
+p1 <- ggplot(airline2, aes(x = Incidents_85_99, y = ..density.., weight = PAX_Carrying_Capacity)) + 
+          geom_histogram(binwidth = 1, color = "black", fill = "white") + 
+          labs(x = "Incidents, 1985-1999", y = "Density", title = "Incidents per Trillion Available Seat Kilometers for All Non-U.S. Airlines, 1985-1999") + 
+          theme_classic() + geom_density(alpha=.5, fill="pink")
+p1
+
+p2 <- ggplot(airline2, aes(x = Incidents_00_14, y = ..density.., weight = PAX_Carrying_Capacity)) + 
+          geom_histogram(binwidth = 1, color = "black", fill = "white") + 
+          labs(x = "Incidents, 2000-2014", y = "Density", title = "Incidents per Trillion Available Seat Kilometers for All Non-U.S. Airlines, 2000-2014") +
+          theme_classic() + geom_density(alpha=.5, fill="pink")
+p2
+
+# Non-statistical Graphing - Scatterplots
+
+p3 <- ggplot(airline2, aes(x = Incidents_85_99, y = Airline, size = PAX_Carrying_Capacity)) +
+          geom_point(color = "red") + 
+          labs(x = "Incidents, 1985-1999", y = "Airline", title = "Incidents per Trillion Available Seat Kilometers per Non-U.S. Airlines, 1985-1999") + 
+          theme_classic() 
+p3
+
+p4 <- ggplot(airline2, aes(x = Incidents_00_14, y = Airline, size = PAX_Carrying_Capacity)) +
+          geom_point(color = "red") + 
+          labs(x = "Incidents, 2000-2014", y = "Airline", title = "Incidents per Trillion Available Seat Kilometers per Non-U.S. Airline, 2000-2014") + 
+          theme_classic()
+p4
+
+```
+
+
+
