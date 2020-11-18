@@ -159,7 +159,7 @@ print(join_surv)
 ggplot(survdata, aes(x = Age)) + 
         geom_histogram(fill = "white", color = "black") + 
         facet_wrap(~ Survived, ncol = 1) + 
-        theme_classic() +
+        theme_few() +
         labs(y = "Frequency", 
              title = "Frequency Distribution of Age Among Deaths and Survivals")
 
